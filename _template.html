@@ -10,219 +10,217 @@
 <style>
 /* ─── 토큰 ─────────────────────────────────────────────── */
 :root{
-  --paper:#FFFFFF;
+  --paper:#FFFFFF;        /* 일반 바탕 */
+  --warm:#F2F1EE;         /* 「글」 미색 바탕 */
   --ink:#16181C;
   --ink-soft:#6E7681;
-  --frost:#C9CFD6;
-  --frost-faint:#E7EBEF;
+  --faint:#9AA1A9;        /* 크레딧 라벨 */
+  --line:#E4E8EC;
+  --slot:#EAECEE;         /* 이미지 자리 회색 박스 */
+  --slot-mark:#C2C8CE;
   --accent:#3A5A78;
+  --band:#111315;         /* 레터박스 띠 */
   --scrim:rgba(12,14,17,.34);
-
-  /* 전 요소 Pretendard 단일 서체 — 두 변수는 이름만 남기고 같은 스택을 가리킨다 */
-  --serif:"Pretendard Variable",Pretendard,-apple-system,'Apple SD Gothic Neo',system-ui,sans-serif;
   --sans:"Pretendard Variable",Pretendard,-apple-system,'Apple SD Gothic Neo',system-ui,sans-serif;
-
-  --drawer-w:260px;
+  --drawer-w:264px;
   --ease:cubic-bezier(.22,1,.36,1);
   --edge:env(safe-area-inset-left,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --paper:#0C0E11; --ink:#E4E6E9; --ink-soft:#8C949E;
-    --frost:#333A44; --frost-faint:#1A1E23;
-    --accent:#7FA6C4; --scrim:rgba(0,0,0,.55);
+    --paper:#0C0E11; --warm:#101215; --ink:#E8E9EB; --ink-soft:#8C949E;
+    --faint:#6B737C; --line:#252A31; --slot:#191D22; --slot-mark:#333A42;
+    --accent:#7FA6C4; --band:#000000; --scrim:rgba(0,0,0,.55);
   }
 }
 :root[data-theme="dark"]{
-  --paper:#0C0E11; --ink:#E4E6E9; --ink-soft:#8C949E;
-  --frost:#333A44; --frost-faint:#1A1E23;
-  --accent:#7FA6C4; --scrim:rgba(0,0,0,.55);
+  --paper:#0C0E11; --warm:#101215; --ink:#E8E9EB; --ink-soft:#8C949E;
+  --faint:#6B737C; --line:#252A31; --slot:#191D22; --slot-mark:#333A42;
+  --accent:#7FA6C4; --band:#000000; --scrim:rgba(0,0,0,.55);
 }
 
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0; background:var(--paper); color:var(--ink);
+  margin:0; background:var(--band); color:var(--ink);
   font-family:var(--sans); overflow-x:hidden;
-  min-height:100vh; min-height:100dvh;
   -webkit-font-smoothing:antialiased;
 }
 :focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+img{display:block; width:100%; height:100%; object-fit:cover}
 
-/* ─── 읽기 무대 ─────────────────────────────────────────── */
+/* ─── 무대 ─────────────────────────────────────────────── */
 .stage{
-  height:100vh; height:100dvh;
+  min-height:100vh; min-height:100dvh;
   display:flex; align-items:center; justify-content:center;
-  padding:9vh clamp(1.5rem,7vw,3rem);
-  padding-left:max(clamp(1.5rem,7vw,3rem),var(--edge));
-  overflow:hidden;
+  padding:clamp(1.5rem,4vh,3.5rem) 0;   /* 위아래 레터박스 띠 */
   transition:opacity .26s var(--ease),filter .26s var(--ease);
 }
-body[data-drawer="open"] .stage{opacity:.2; filter:blur(1px)}
+body[data-drawer="open"] .stage{opacity:.25; filter:blur(1px)}
 
-/* 긴 글: 위에서부터 쌓고 자동 롤링 */
-.stage.is-long{align-items:flex-start}
-/* 사용자가 스크롤로 개입하면 제어권을 넘긴다 (스크롤바는 숨김) */
-.stage.is-free{overflow-y:auto; align-items:flex-start; scrollbar-width:none}
-.stage.is-free::-webkit-scrollbar{display:none}
-
-.roller{width:100%; max-width:560px; will-change:transform; text-align:center}
-.reading[hidden]{display:none}
-
-/* 출처·수상 정보 — 본문 아래, 충분한 여백을 두고 세로로 쌓는다 */
-.meta{
-  font-size:.75rem; font-weight:400; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--ink-soft);
-  display:flex; flex-direction:column; align-items:center; gap:.55rem;
-  margin:clamp(5.5rem,15vw,9.5rem) 0 0; line-height:1.5;
+.sheet{
+  width:min(1920px, 100vw);
+  background:var(--paper);
+  overflow:hidden;
 }
-.meta .award{color:var(--accent)}
+.sheet[data-layout="E"]{background:var(--warm)}
 
+/* ─── 이미지 슬롯 ───────────────────────────────────────── */
+.slot{background:var(--slot); position:relative; overflow:hidden; min-height:0; min-width:0}
+.slot.is-empty::after{
+  content:"이미지"; position:absolute; inset:0;
+  display:grid; place-items:center;
+  font-size:.7rem; letter-spacing:.18em; color:var(--slot-mark);
+}
+.details{display:grid; gap:1px; background:var(--line)}
+.details[data-n="1"]{grid-template-columns:1fr}
+.details[data-n="2"]{grid-template-columns:1fr 1fr}
+.details[data-n="3"]{grid-template-columns:1fr 1.5fr 1fr}
+.details[data-n="4"]{grid-template-columns:repeat(4,1fr)}
+.details[data-n="5"],.details[data-n="6"]{grid-template-columns:repeat(3,1fr)}
+
+/* ─── 공통 텍스트 ───────────────────────────────────────── */
 .title{
-  font-family:var(--serif); font-weight:700;
-  font-size:clamp(1.75rem,1.4rem + 1.7vw,2.4rem);
-  line-height:1.35; letter-spacing:-.02em;
-  margin:0 0 clamp(2.75rem,7vw,4rem); text-wrap:balance;
+  font-size:clamp(1.35rem,1.1rem + .9vw,1.75rem); font-weight:600;
+  line-height:1.4; letter-spacing:-.02em; margin:0; text-wrap:balance;
 }
-
-.stanza{margin:0 0 clamp(2.25rem,6vw,3.25rem)}
-.stanza:last-of-type{margin-bottom:0}
-/* 「삶」 산문 문단 */
+.lead{
+  font-size:clamp(.95rem,.9rem + .3vw,1.1rem); font-weight:500;
+  line-height:1.75; letter-spacing:-.01em; margin:0; color:var(--ink);
+  text-wrap:pretty;
+}
 .para{
-  font-family:var(--serif); font-weight:440;
-  font-size:clamp(1rem,.95rem + .35vw,1.125rem);
-  line-height:2.05; letter-spacing:-.01em;
-  margin:0 0 1.7em; text-wrap:pretty;
+  font-size:.82rem; font-weight:400; line-height:1.95;
+  letter-spacing:-.005em; margin:0 0 1.1em; color:var(--ink-soft);
+  text-wrap:pretty;
 }
 .para:last-child{margin-bottom:0}
-
-/* 「일」 소제목 */
-.h2{
-  font-family:var(--serif); font-weight:600;
-  font-size:clamp(1.1rem,1rem + .5vw,1.32rem); line-height:1.5;
-  letter-spacing:-.015em; text-wrap:balance;
-  margin:clamp(3.25rem,8vw,4.75rem) 0 1.6rem;
-}
-/* 그림 — 본문(560px)보다 넓게, 화면 중앙 기준으로 펼친다 */
-.figure{
-  width:900px; max-width:calc(100vw - 3rem);
-  margin:clamp(2.5rem,6vw,3.5rem) 0;
-  margin-left:50%; transform:translateX(-50%);
-}
-.figure img{
-  display:block; width:100%; height:auto;
-  border:1px solid var(--frost-faint);
+.sub{
+  font-size:.9rem; font-weight:600; line-height:1.5; color:var(--ink);
+  margin:1.8em 0 .7em;
 }
 
-/* 「일」은 긴 산문이라 왼쪽 정렬 — 가운데 정렬은 줄 시작점이 매번 달라져 읽기 힘들다.
-   그림은 그대로 화면 중앙에 둔다. */
-/* 이미지가 많은 글 — 격자로 깔아 훑을 수 있게 한다 */
-.gallery{
-  width:900px; max-width:calc(100vw - 3rem);
-  margin:clamp(2.5rem,6vw,3.5rem) 0;
-  margin-left:50%; transform:translateX(-50%);
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-  gap:1rem; align-items:start;
-}
-.gallery figure{margin:0}
-.gallery img{
-  display:block; width:100%; height:auto;
-  border:1px solid var(--frost-faint);
-}
-@media (max-width:640px){
-  .gallery{grid-template-columns:repeat(2,1fr); gap:.6rem}
+/* 크레딧 */
+.credits{display:grid; gap:.42rem 1.6rem; align-content:start}
+.credits.two{grid-template-columns:1fr 1fr}
+.cred{display:flex; align-items:baseline; gap:.6rem; font-size:.72rem; line-height:1.5}
+.cred dt{color:var(--faint); flex:none; min-width:3.2em}
+.cred dd{margin:0; color:var(--ink-soft)}
+.cred dd:empty::after{
+  content:""; display:inline-block; width:5.5em;
+  border-bottom:1px dotted var(--slot-mark); transform:translateY(-.25em);
 }
 
-body[data-section="work"] .roller{text-align:left}
-body[data-section="work"] .meta{align-items:flex-start}
-.stanza-no{
-  font-family:var(--sans); font-size:.7rem; font-weight:500;
-  letter-spacing:.2em; color:var(--frost);
-  display:block; margin-bottom:1.1rem;
+/* ─── 레이아웃 A : 좌측 이미지 + 우측 텍스트 ─────────────── */
+/* 이미지는 비율을 고정하고, 텍스트는 길이대로 흐르게 둔다.
+   안쪽 스크롤에 가두면 분량을 눈으로 가늠할 수 없다. */
+.sheet[data-layout="A"]{display:grid; grid-template-columns:58fr 42fr; align-items:stretch}
+/* 본문이 길어도 이미지 칼럼은 늘어나지 않는다. 스크롤 중에도 보이도록 붙여둔다. */
+.A-media{
+  display:grid; grid-template-rows:auto auto; gap:1px; background:var(--line);
+  align-self:start; position:sticky; top:0;
 }
-.line{
-  font-family:var(--serif); font-weight:440;   /* 기본 400 대비 +10% */
-  font-size:clamp(1rem,.95rem + .35vw,1.125rem);
-  line-height:2.05; letter-spacing:-.01em;
-  margin:0; text-wrap:pretty;
+.A-media .hero{aspect-ratio:1112/701}
+.A-media .details{aspect-ratio:1112/378}
+.A-text{
+  display:flex; flex-direction:column;
+  padding:clamp(1.8rem,3.4vw,3.4rem);
+  gap:clamp(1.4rem,3vh,2.6rem);
+}
+.A-text .credits{border-top:1px solid var(--line); padding-top:1.3rem; margin-top:auto}
+
+/* ─── 레이아웃 C : 상단 이미지 + 하단 3단 ────────────────── */
+.sheet[data-layout="C"]{display:grid; grid-template-rows:auto auto auto}
+/* 밴드 비율은 원안(1920×616)을 따른다 — 본문이 길어져도 이미지는 커지지 않는다 */
+.C-media{
+  display:grid; grid-template-columns:54fr 23fr 23fr; gap:1px;
+  background:var(--line); aspect-ratio:1920/616;
+}
+.C-media .hero{min-height:0}
+.C-media .stack{display:grid; grid-template-rows:1fr 1fr; gap:1px; background:var(--line)}
+.C-head{padding:clamp(1.2rem,2.4vw,2rem) clamp(1.6rem,3vw,3rem) 0}
+.C-cols{
+  display:grid; grid-template-columns:32fr 40fr 28fr;
+  gap:0 clamp(1.4rem,2.6vw,2.6rem);
+  padding:clamp(1.2rem,2.4vw,2rem) clamp(1.6rem,3vw,3rem) clamp(1.6rem,3vw,3rem);
+  border-top:1px solid var(--line); margin-top:clamp(1.2rem,2.4vw,2rem);
+}
+.C-cols > * + *{border-left:1px solid var(--line); padding-left:clamp(1.4rem,2.6vw,2.6rem)}
+
+/* 7장 초과분 */
+.overflow{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:1px; background:var(--line); border-top:1px solid var(--line);
+}
+.overflow .slot{aspect-ratio:3/2}
+
+/* ─── 레이아웃 E : 「글」 가운데 정렬 ─────────────────────── */
+.sheet[data-layout="E"]{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:clamp(3rem,10vh,7rem) clamp(1.5rem,6vw,3rem);
+  min-height:min(1080px, 86vh);
+}
+.E-title{
+  font-size:clamp(1.4rem,1.2rem + 1vw,1.9rem); font-weight:700;
+  letter-spacing:-.02em; margin:0 0 clamp(2rem,5vh,3.2rem); color:var(--ink);
+}
+.E-body{max-width:44rem; display:flex; flex-direction:column; gap:1.9em}
+.E-stanza{
+  font-size:clamp(.9rem,.86rem + .25vw,1rem); font-weight:440;
+  line-height:2.05; letter-spacing:-.01em; margin:0; color:var(--ink-soft);
+  white-space:pre-line; text-wrap:pretty;
+}
+.E-credit{
+  margin:clamp(3.5rem,9vh,6rem) 0 0; font-size:.68rem;
+  letter-spacing:.04em; color:var(--faint);
 }
 
-/* 빈 상태 */
-.empty{width:100%}
-.empty h2{
-  font-family:var(--serif); font-size:1.5rem; font-weight:400;
-  margin:0 0 .75rem; color:var(--ink);
-}
-.empty p{font-size:.9rem; line-height:1.8; color:var(--ink-soft); margin:0}
-
-
-
-/* 드로어 상단 내비 — 화면에 상시 노출되는 UI 는 두지 않는다 */
-.dnav{display:flex; gap:1.5rem; align-items:baseline}
-.dnav button{
-  font-family:var(--sans); font-size:1.05rem; font-weight:500;
-  letter-spacing:.01em; background:none; border:0; cursor:pointer;
-  padding:.2rem 0 .35rem; color:var(--ink-soft);
-  border-bottom:1.5px solid transparent;
-  transition:color .18s var(--ease),border-color .18s var(--ease);
-}
-.dnav button:hover{color:var(--ink)}
-.dnav button[aria-current="true"]{
-  color:var(--ink); font-weight:700; border-bottom-color:var(--accent);
-}
-
-/* ─── 좌측 힌트 / 토글 ──────────────────────────────────── */
+/* ─── 좌측 힌트 / 드로어 ───────────────────────────────── */
 .hint{
   position:fixed; top:0; bottom:0; left:0; width:2px;
-  background:var(--ink); opacity:.12; border:0; padding:0;
-  z-index:30; cursor:pointer;
-  transition:opacity .2s var(--ease);
+  background:var(--ink); opacity:.14; border:0; padding:0;
+  z-index:30; cursor:pointer; transition:opacity .2s var(--ease);
 }
-.hint:hover{opacity:.3}
+.hint:hover{opacity:.34}
 body[data-drawer="open"] .hint{opacity:0; pointer-events:none}
 
-/* ─── 드로어 ───────────────────────────────────────────── */
 .drawer{
-  position:fixed; inset:0 auto 0 0; z-index:40;
-  width:var(--drawer-w);
-  padding:clamp(2rem,5vh,3rem) 0 clamp(1.5rem,4vh,2.25rem);
-  padding-left:max(1.75rem,var(--edge));
-  padding-right:1.25rem;
+  position:fixed; inset:0 auto 0 0; z-index:40; width:var(--drawer-w);
+  padding:clamp(2rem,5vh,3rem) 1.25rem clamp(1.5rem,4vh,2.25rem) max(1.75rem,var(--edge));
   background:var(--paper);
-  display:flex; flex-direction:column; gap:2.5rem;
+  display:flex; flex-direction:column; gap:2.2rem;
   transform:translateX(-100%); opacity:0;
   transition:transform .26s var(--ease),opacity .2s var(--ease);
   overflow-y:auto; overscroll-behavior:contain;
 }
 body[data-drawer="open"] .drawer{transform:translateX(0); opacity:1}
 
+.dnav{display:flex; gap:1.5rem; align-items:baseline}
+.dnav button{
+  font-family:var(--sans); font-size:1.05rem; font-weight:500;
+  background:none; border:0; cursor:pointer; padding:.2rem 0 .35rem;
+  color:var(--ink-soft); border-bottom:1.5px solid transparent;
+  transition:color .18s var(--ease),border-color .18s var(--ease);
+}
+.dnav button:hover{color:var(--ink)}
+.dnav button[aria-current="true"]{color:var(--ink); font-weight:700; border-bottom-color:var(--accent)}
 
-.rule{height:1px; background:var(--frost-faint); margin:0}
-
-.titles{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.15rem; flex:1}
+.rule{height:1px; background:var(--line); margin:0; border:0}
+.titles{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.1rem; flex:1}
 .titles button{
-  font-family:var(--serif); font-size:.95rem; font-weight:400;
-  background:none; border:0; padding:.55rem 0; cursor:pointer;
-  color:var(--ink-soft); text-align:left; width:100%;
-  display:flex; align-items:baseline; gap:.55rem;
+  font-family:var(--sans); font-size:.88rem; background:none; border:0;
+  padding:.5rem 0; cursor:pointer; color:var(--ink-soft); text-align:left;
+  width:100%; display:flex; align-items:baseline; gap:.5rem; line-height:1.45;
   transition:color .18s var(--ease);
 }
 .titles button:hover,.titles button:focus-visible{color:var(--ink)}
 .titles button[aria-current="true"]{color:var(--accent)}
 .titles button[aria-current="true"] .dash{opacity:1}
-.titles button[disabled]{color:var(--frost); cursor:default}
-.titles button[disabled]:hover{color:var(--frost)}
-.dash{
-  flex:none; width:.75rem; height:1px; background:currentColor;
-  opacity:0; transition:opacity .18s var(--ease); transform:translateY(-.3em);
-}
+.dash{flex:none; width:.7rem; height:1px; background:currentColor; opacity:0;
+  transition:opacity .18s var(--ease); transform:translateY(-.3em)}
 .titles button:hover .dash{opacity:.45}
-.sig{
-  font-size:.68rem; letter-spacing:.22em; color:var(--frost);
-  margin:0; text-transform:uppercase;
-}
+.sig{font-size:.66rem; letter-spacing:.22em; color:var(--faint); margin:0; text-transform:uppercase}
 
-/* ─── 백드롭 (터치 환경) ────────────────────────────────── */
 .backdrop{
   position:fixed; inset:0; z-index:35; background:var(--scrim);
   opacity:0; pointer-events:none; transition:opacity .26s var(--ease);
@@ -231,52 +229,38 @@ body[data-drawer="open"] .drawer{transform:translateX(0); opacity:1}
 body[data-drawer="open"] .backdrop{opacity:1}
 
 /* ─── 반응형 ───────────────────────────────────────────── */
-
-/* 태블릿 이하: 드로어가 조금 넓어지고 백드롭이 작동한다 */
 @media (max-width:1023px){
-  .stage{padding-top:8vh; padding-bottom:8vh}
+  .sheet[data-layout="A"]{grid-template-columns:1fr}
+  .A-media{position:static}
+  .C-cols{grid-template-columns:1fr; gap:1.6rem}
+  .C-cols > * + *{border-left:0; border-top:1px solid var(--line);
+    padding-left:0; padding-top:1.6rem}
+  .credits.two{grid-template-columns:1fr}
 }
-
-/* 터치 우선 환경: hover 트리거가 없으므로 상시 토글 버튼을 준다 */
 @media (hover:none),(pointer:coarse),(max-width:767px){
   .hint{
     top:max(.75rem,env(safe-area-inset-top,0px)); bottom:auto;
-    left:max(.75rem,var(--edge));
-    width:44px; height:44px; opacity:1;
-    display:grid; place-items:center;
-    background:none; border-radius:50%;
+    left:max(.75rem,var(--edge)); width:44px; height:44px; opacity:1;
+    display:grid; place-items:center; background:none; border-radius:50%;
   }
-  .hint::before{
-    content:""; width:14px; height:1px; background:var(--ink);
-    box-shadow:0 5px 0 var(--ink),0 -5px 0 var(--ink); opacity:.45;
-  }
-  .hint:hover{opacity:1}
+  .hint::before{content:""; width:14px; height:1px; background:var(--ink);
+    box-shadow:0 5px 0 var(--ink),0 -5px 0 var(--ink); opacity:.5}
   body[data-drawer="open"] .backdrop{pointer-events:auto}
 }
-
 @media (max-width:767px){
-  :root{--drawer-w:min(78vw,300px)}
-  .stage{
-    padding:calc(4.25rem + env(safe-area-inset-top,0px)) 1.5rem 4rem;
-    /* 정렬은 길이에 따라 .is-long / .is-free 가 결정한다 —
-       여기서 flex-start 를 강제하면 짧은 글의 중앙 고정이 깨진다 */
-  }
-  /* 짧은 글은 화면 정가운데 — 상하 패딩이 비대칭이면 그만큼 어긋난다 */
-  .stage:not(.is-long):not(.is-free){padding-top:4rem; padding-bottom:4rem}
-  .drawer{box-shadow:1px 0 0 var(--frost-faint)}
-  .titles button{padding:.7rem 0}   /* 터치 타깃 확보 */
-  .meta{font-size:.68rem; gap:.4rem .7rem}
+  :root{--drawer-w:min(80vw,300px)}
+  .stage{padding:0}
+  .C-media{grid-template-columns:1fr; grid-template-rows:auto auto}
+  .C-media .stack{grid-template-rows:auto; grid-template-columns:1fr 1fr}
+  .details[data-n="3"],.details[data-n="4"],
+  .details[data-n="5"],.details[data-n="6"]{grid-template-columns:1fr 1fr}
 }
-
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important; transition-duration:.01ms !important}
-  .drawer{transition:opacity .1s linear}
-  .stage{filter:none !important}
 }
 </style>
 </head>
 <body data-drawer="closed">
-
 
 <button class="hint" id="hint" aria-label="목록 열기" aria-expanded="false" aria-controls="drawer"></button>
 <button class="backdrop" id="backdrop" tabindex="-1" aria-label="목록 닫기"></button>
@@ -288,180 +272,114 @@ body[data-drawer="open"] .backdrop{opacity:1}
   <p class="sig">Kim Nam Yong</p>
 </nav>
 
-<main class="stage" id="stage">
-  <div class="roller" id="roller">
-    <article class="reading" id="reading"></article>
-  </div>
-</main>
+<main class="stage" id="stage"><article class="sheet" id="sheet"></article></main>
 
-<script src="./supabase-config.js"></script>
 <script>
 const DATA = /*__DATA__*/null;
-
-/* 튜닝값 — 기획서 2.3 */
 const OPEN_X=16, CLOSE_X=300, OPEN_DELAY=120, CLOSE_DELAY=200;
+const MIN_SLOTS = 3;   /* 이미지가 없어도 자리는 보여준다 — 채울 곳 표시 */
 
-const SECTIONS={
-  work:{label:'일', items:DATA.work||[]},
-  writing:{label:'글', items:DATA.writing.concat([
-    {slug:'p1',title:'말이 남는 자리',pending:true},
-    {slug:'p2',title:'쓰지 않기로 한 문장',pending:true}
-  ])},
-  life:{label:'삶', items:[]}
-};
-const EMPTY={
-  work:{h:'일', p:'UX 프로젝트 케이스가 이 자리에 들어갑니다.'},
-  life:{h:'삶', p:'아직 기록이 없습니다.'}
+const SECTIONS = {
+  work:    {label:'일', items:DATA.work    || []},
+  writing: {label:'글', items:DATA.writing || []},
+  life:    {label:'삶', items:DATA.life    || []},
 };
 
 const body=document.body, hint=document.getElementById('hint'),
       backdrop=document.getElementById('backdrop'), drawer=document.getElementById('drawer'),
       elNav=document.getElementById('dnav'), elTitles=document.getElementById('titles'),
-      elReading=document.getElementById('reading'),
-      stage=document.getElementById('stage'), roller=document.getElementById('roller');
+      sheet=document.getElementById('sheet');
 
-let section='writing', current=SECTIONS.writing.items[0], preview=null, open=null;
+let section='work', current=SECTIONS.work.items[0]||null, preview=null, open=null;
 
-/* ── 드로어 개폐 ─────────────────────────────── */
+const esc = t => String(t==null?'':t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ── 드로어 ─────────────────────────────────── */
 function setOpen(v){
   if(open===v) return;
-  open=v;
-  body.dataset.drawer=v?'open':'closed';
+  open=v; body.dataset.drawer=v?'open':'closed';
   hint.setAttribute('aria-expanded',String(v));
   drawer.toggleAttribute('inert',!v);
-  if(!v && preview){preview=null; render();}
+  if(!v && preview){ preview=null; render(); }
 }
 setOpen(false);
-
 hint.addEventListener('click',e=>{e.stopPropagation(); setOpen(!open);});
 backdrop.addEventListener('click',()=>setOpen(false));
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&open){setOpen(false); hint.focus();}
-});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&open){setOpen(false); hint.focus();} });
 
-/* ── 데스크톱: 엣지 호버 + 히스테리시스 ────────── */
 const fine=matchMedia('(hover:hover) and (pointer:fine) and (min-width:768px)');
 let tOpen=null,tClose=null;
 function onMove(e){
   const x=e.clientX;
-  if(!open){
-    if(x<=OPEN_X){ if(tOpen===null) tOpen=setTimeout(()=>{tOpen=null; setOpen(true);},OPEN_DELAY); }
-    else if(tOpen!==null){clearTimeout(tOpen); tOpen=null;}
-  }else{
-    if(x>=CLOSE_X){ if(tClose===null) tClose=setTimeout(()=>{tClose=null; setOpen(false);},CLOSE_DELAY); }
-    else if(tClose!==null){clearTimeout(tClose); tClose=null;}
-  }
+  if(!open){ if(x<=OPEN_X){ if(tOpen===null) tOpen=setTimeout(()=>{tOpen=null;setOpen(true);},OPEN_DELAY); }
+             else if(tOpen!==null){clearTimeout(tOpen); tOpen=null;} }
+  else{ if(x>=CLOSE_X){ if(tClose===null) tClose=setTimeout(()=>{tClose=null;setOpen(false);},CLOSE_DELAY); }
+        else if(tClose!==null){clearTimeout(tClose); tClose=null;} }
 }
-function bindFine(){
-  window.removeEventListener('pointermove',onMove);
-  if(fine.matches) window.addEventListener('pointermove',onMove,{passive:true});
-}
+function bindFine(){ removeEventListener('pointermove',onMove); if(fine.matches) addEventListener('pointermove',onMove,{passive:true}); }
 bindFine(); fine.addEventListener('change',bindFine);
 
-/* ── 터치: 좌측 엣지 스와이프 ───────────────── */
 let sx=null,sy=null;
-addEventListener('touchstart',e=>{
-  const t=e.touches[0];
-  if(!open && t.clientX<=24){sx=t.clientX; sy=t.clientY;}
-},{passive:true});
-addEventListener('touchmove',e=>{
-  if(sx===null) return;
-  const t=e.touches[0];
-  if(t.clientX-sx>40 && Math.abs(t.clientY-sy)<50){setOpen(true); sx=null;}
-},{passive:true});
+addEventListener('touchstart',e=>{const t=e.touches[0]; if(!open&&t.clientX<=24){sx=t.clientX; sy=t.clientY;}},{passive:true});
+addEventListener('touchmove',e=>{ if(sx===null)return; const t=e.touches[0];
+  if(t.clientX-sx>40 && Math.abs(t.clientY-sy)<50){setOpen(true); sx=null;} },{passive:true});
 addEventListener('touchend',()=>{sx=null;},{passive:true});
 
-
-
-/* ── 자동 롤링 ───────────────────────────────── */
-const ROLL_SPEED=18,      /* px/초 — 굉장히 느리게 */
-      START_HOLD=2600,    /* 시작 전 정지 */
-      END_HOLD=2600,      /* 끝에서 정지 */
-      RETURN_MS=1200;     /* 처음 위치로 복귀 */
-const reduce=matchMedia('(prefers-reduced-motion:reduce)');
-let raf=null,phase='idle',last=0,acc=0,y=0,dist=0,retFrom=0,freed=false;
-
-function cancelRoll(){ if(raf){cancelAnimationFrame(raf);raf=null;} phase='idle'; last=0; acc=0; }
-function easeInOut(p){ return p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2; }
-
-function layout(){
-  cancelRoll(); freed=false;
-  stage.classList.remove('is-long','is-free');
-  stage.scrollTop=0; roller.style.transform='translateY(0)'; y=0;
-  const cs=getComputedStyle(stage);
-  const avail=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
-  const h=roller.offsetHeight;
-  if(h>avail+1){                       /* 길다 → 롤링 */
-    stage.classList.add('is-long');
-    dist=h-avail;
-    if(reduce.matches||section==='work'){ stage.classList.add('is-free'); freed=true; }
-    else { phase='hold-start'; raf=requestAnimationFrame(step); }
-  } else { dist=0; }                   /* 짧다 → 화면 가운데 고정 */
+/* ── 이미지 슬롯 ────────────────────────────── */
+function slot(img, cls){
+  if(!img) return '<div class="slot is-empty '+(cls||'')+'"></div>';
+  const d = (img.w&&img.h) ? ' width="'+img.w+'" height="'+img.h+'"' : '';
+  return '<div class="slot '+(cls||'')+'"><img src="'+esc(img.src)+'" alt="'+esc(img.alt)+'"'+d+' loading="lazy"></div>';
+}
+function detailRow(details){
+  const list = details.slice();
+  while(list.length < MIN_SLOTS) list.push(null);      /* 빈 자리도 보여준다 */
+  const n = Math.min(list.length, 6);
+  return '<div class="details" data-n="'+n+'">'+list.slice(0,6).map(d=>slot(d)).join('')+'</div>';
+}
+function creditList(credits, two){
+  return '<dl class="credits'+(two?' two':'')+'">'+credits.map(c=>
+    '<div class="cred"><dt>'+esc(c.k)+'</dt><dd>'+esc(c.v)+'</dd></div>').join('')+'</dl>';
+}
+function paras(list){
+  return list.map(b => b.t==='h'
+    ? '<h2 class="sub">'+esc(b.v)+'</h2>'
+    : '<p class="para">'+esc(b.v).replace(/\n/g,'<br>')+'</p>').join('');
 }
 
-function step(now){
-  if(!last) last=now;
-  const dt=now-last; last=now;
-  if(!open){                           /* 드로어가 열려 있는 동안은 정지 */
-    acc+=dt;
-    if(phase==='hold-start'){ if(acc>=START_HOLD){phase='rolling'; acc=0;} }
-    else if(phase==='rolling'){
-      y=Math.min(dist,(acc/1000)*ROLL_SPEED);
-      if(y>=dist){ phase='hold-end'; acc=0; retFrom=y; }
-    }
-    else if(phase==='hold-end'){ if(acc>=END_HOLD){phase='returning'; acc=0;} }
-    else if(phase==='returning'){
-      const p=Math.min(1,acc/RETURN_MS);
-      y=retFrom*(1-easeInOut(p));
-      if(p>=1){ y=0; phase='done'; }   /* 처음 위치에서 고정 */
-    }
-    roller.style.transform='translateY('+(-y)+'px)';
-  }
-  if(phase!=='done'&&phase!=='idle') raf=requestAnimationFrame(step); else raf=null;
+/* ── 레이아웃 ───────────────────────────────── */
+function layoutA(it){
+  return '<div class="A-media">'+ slot(it.hero,'hero') + detailRow(it.details) +'</div>'+
+    '<div class="A-text">'+
+      '<h1 class="title">'+esc(it.title)+'</h1>'+
+      (it.lead ? '<p class="lead">'+esc(it.lead)+'</p>' : '<p class="lead"></p>')+
+      '<div>'+paras(it.body)+'</div>'+
+      creditList(it.credits, true)+
+    '</div>'+
+    (it.extra.length ? '<div class="overflow">'+it.extra.map(d=>slot(d)).join('')+'</div>' : '');
+}
+function layoutC(it){
+  const d = it.details.slice();
+  while(d.length < 3) d.push(null);
+  return '<div class="C-media">'+ slot(it.hero,'hero') + slot(d[0]) +
+      '<div class="stack">'+slot(d[1])+slot(d[2])+'</div>'+
+    '</div>'+
+    '<div class="C-head"><h1 class="title">'+esc(it.title)+'</h1></div>'+
+    '<div class="C-cols">'+
+      '<div>'+(it.lead ? '<p class="lead">'+esc(it.lead)+'</p>' : '')+'</div>'+
+      '<div>'+paras(it.body)+'</div>'+
+      '<div>'+creditList(it.credits,false)+'</div>'+
+    '</div>'+
+    (d.length>3 || it.extra.length
+      ? '<div class="overflow">'+d.slice(3).concat(it.extra).filter(Boolean).map(x=>slot(x)).join('')+'</div>' : '');
+}
+function layoutE(it){
+  return '<h1 class="E-title">'+esc(it.title)+'</h1>'+
+    '<div class="E-body">'+it.blocks.map(b=>'<p class="E-stanza">'+esc(b)+'</p>').join('')+'</div>'+
+    (it.credit ? '<p class="E-credit">'+esc(it.credit)+'</p>' : '');
 }
 
-/* 사용자가 직접 스크롤하면 롤링을 멈추고 제어권을 넘긴다 */
-function freeScroll(){
-  if(freed||sx!==null||!stage.classList.contains('is-long')) return;
-  cancelRoll(); freed=true;
-  roller.style.transform='translateY(0)';
-  stage.classList.add('is-free');
-  stage.scrollTop=y;
-}
-stage.addEventListener('wheel',freeScroll,{passive:true});
-stage.addEventListener('touchmove',freeScroll,{passive:true});
-addEventListener('resize',()=>{ if(!freed) layout(); },{passive:true});
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>layout());
-
-
-/* ── 「삶」 — Supabase 지연 로드 ─────────────── */
-function esc(t){ return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-let lifeState='idle';   /* idle | loading | done | off */
-async function loadLife(){
-  if(lifeState==='loading'||lifeState==='done') return;
-  const cfg=window.SUPABASE_CONFIG||{};
-  if(!cfg.url||!cfg.key){ lifeState='off'; return; }
-  lifeState='loading';
-  if(section==='life'){ render(); }
-  try{
-    const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    const db=createClient(cfg.url,cfg.key);
-    const {data,error}=await db.from('life_entries')
-      .select('id,written_on,body').eq('published',true)
-      .order('written_on',{ascending:false}).order('created_at',{ascending:false});
-    if(error) throw error;
-    SECTIONS.life.items=(data||[]).map(e=>({
-      slug:e.id, title:String(e.written_on).replaceAll('-','.'), prose:e.body
-    }));
-    lifeState='done';
-  }catch(err){ lifeState='off'; }
-  if(section==='life'){
-    current=SECTIONS.life.items[0]||null;
-    renderTitles(); render();
-  }
-}
-
-/* ── 렌더 ────────────────────────────────────── */
+/* ── 렌더 ───────────────────────────────────── */
 function renderNav(){
   elNav.innerHTML='';
   for(const [k,v] of Object.entries(SECTIONS)){
@@ -469,10 +387,8 @@ function renderNav(){
     b.type='button'; b.textContent=v.label;
     b.setAttribute('aria-current',String(k===section));
     b.addEventListener('click',()=>{
-      section=k; preview=null;
-      current=SECTIONS[k].items[0]||null;
+      section=k; preview=null; current=SECTIONS[k].items[0]||null;
       renderNav(); renderTitles(); render();
-      if(k==='life') loadLife();
     });
     elNav.appendChild(b);
   }
@@ -480,84 +396,24 @@ function renderNav(){
 function renderTitles(){
   elTitles.innerHTML='';
   const items=SECTIONS[section].items;
-  if(!items.length){
-    const li=document.createElement('li');
-    li.innerHTML='<button type="button" disabled><span class="dash"></span>준비 중</button>';
-    elTitles.appendChild(li); return;
-  }
+  if(!items.length){ elTitles.innerHTML='<li><button type="button" disabled>준비 중</button></li>'; return; }
   items.forEach(it=>{
-    const li=document.createElement('li');
-    const b=document.createElement('button');
+    const li=document.createElement('li'), b=document.createElement('button');
     b.type='button';
-    b.innerHTML='<span class="dash"></span>'+(it.label||it.title);
+    b.innerHTML='<span class="dash"></span><span>'+esc(it.label||it.title)+'</span>';
     b.setAttribute('aria-current',String(current&&current.slug===it.slug));
-    /* hover = 프리뷰, click = 확정 */
     b.addEventListener('pointerenter',()=>{ if(fine.matches){preview=it; render();} });
     b.addEventListener('click',()=>{ current=it; preview=null; setOpen(false); renderTitles(); render(); });
     li.appendChild(b); elTitles.appendChild(li);
   });
 }
-function paint(){
+function render(){
   const it=preview||current;
-  if(!it){
-    if(section==='life'&&lifeState==='loading'){
-      elReading.className='empty';
-      elReading.innerHTML='<h2>삶</h2><p>불러오는 중…</p>'; return;
-    }
-    const e=EMPTY[section]||{h:'',p:''};
-    elReading.className='empty';
-    elReading.innerHTML='<h2>'+e.h+'</h2><p>'+e.p+'</p>';
-    return;
-  }
-  elReading.className='reading';
-  if(it.blocks){
-    let h='<h1 class="title">'+esc(it.title)+'</h1>';
-    it.blocks.forEach(b=>{
-      if(b.t==='gallery'){
-        h+='<div class="gallery">'+b.items.map(g=>{
-          const d=(g.w&&g.h)?' width="'+g.w+'" height="'+g.h+'"':'';
-          return '<figure><img src="'+esc(g.src)+'" alt="'+esc(g.alt)+'"'+d+' loading="lazy"></figure>';
-        }).join('')+'</div>';
-      } else if(b.t==='img'){
-        const dim=(b.w&&b.h)?' width="'+b.w+'" height="'+b.h+'"':'';
-        h+='<figure class="figure"><img src="'+esc(b.src)+'" alt="'+esc(b.alt)+'"'+dim+' loading="lazy"></figure>';
-      } else if(b.t==='h'){
-        h+='<h2 class="h2">'+esc(b.v)+'</h2>';
-      } else {
-        h+='<p class="para">'+esc(b.v).replace(/\n/g,'<br>')+'</p>';
-      }
-    });
-    const meta=[it.period,it.org,it.role].filter(Boolean);
-    if(meta.length) h+='<p class="meta">'+meta.map(v=>'<span>'+esc(v)+'</span>').join('')+'</p>';
-    elReading.innerHTML=h;
-    /* 이미지가 늦게 뜨면 높이가 바뀌므로 다시 계산한다 */
-    elReading.querySelectorAll('img').forEach(im=>{
-      /* 일반 스크롤 모드에서는 브라우저가 알아서 재배치한다.
-         여기서 layout() 을 부르면 읽던 위치가 맨 위로 튕긴다. */
-      if(!im.complete) im.addEventListener('load',()=>{ if(!freed) layout(); },{once:true});
-    });
-    return;
-  }
-  if(it.prose){
-    elReading.innerHTML='<h1 class="title">'+esc(it.title)+'</h1>'+
-      it.prose.split(/\n{2,}/).map(t=>'<p class="para">'+esc(t).replace(/\n/g,'<br>')+'</p>').join('');
-    return;
-  }
-  if(it.pending){
-    elReading.className='empty';
-    elReading.innerHTML='<h2>'+it.title+'</h2><p>이 자리에 원고가 들어갑니다.</p>';
-    return;
-  }
-  let h='<h1 class="title">'+it.title+'</h1>';
-  it.stanzas.forEach(s=>{
-    h+='<section class="stanza"><span class="stanza-no">'+s.no+'</span>'+
-       s.lines.map(l=>'<p class="line">'+l+'</p>').join('')+'</section>';
-  });
-  h+='<p class="meta"><span>'+it.year+'</span><span>'+it.outlet+'</span>'+
-     '<span class="award">'+it.award+'</span></p>';
-  elReading.innerHTML=h;
+  body.dataset.section=section;
+  if(!it){ sheet.dataset.layout='E'; sheet.innerHTML='<h1 class="E-title">준비 중</h1>'; return; }
+  sheet.dataset.layout=it.layout||'A';
+  sheet.innerHTML = it.layout==='E' ? layoutE(it) : (it.layout==='C' ? layoutC(it) : layoutA(it));
 }
-function render(){ body.dataset.section=section; paint(); layout(); }
 renderNav(); renderTitles(); render();
 </script>
 </body>

@@ -7,6 +7,7 @@
 """
 import xml.etree.ElementTree as ET
 import re, os, sys, html, json, urllib.request, unicodedata
+from urllib.parse import quote, urlsplit, urlunsplit
 
 NS = {'wp': 'http://wordpress.org/export/1.2/',
       'content': 'http://purl.org/rss/1.0/modules/content/'}
@@ -21,8 +22,12 @@ g = lambda i, t: i.findtext(t, '', NS)
 
 # ── 첨부 색인 ────────────────────────────────────────────
 def base_key(u):
+    """본문 참조와 첨부 등록명을 같은 열쇠로 맞춘다.
+    워드프레스는 리사이즈본에 -1024x683, 대용량 원본에 -scaled 를 붙인다."""
     n = os.path.basename(u)
-    return re.sub(r'-\d+x\d+(?=\.[a-z]+$)', '', n, flags=re.I).lower()
+    n = re.sub(r'-\d+x\d+(?=\.[a-z]+$)', '', n, flags=re.I)
+    n = re.sub(r'-scaled(?=\.[a-z]+$)', '', n, flags=re.I)
+    return n.lower()
 
 
 def build_attachment_index(items):
@@ -75,6 +80,12 @@ def to_blocks(body, resolve):
 
 
 # ── 이미지 내려받기 · 변환 ───────────────────────────────
+def safe_url(u):
+    """한글 파일명 URL 은 경로를 percent-encode 해야 요청이 나간다."""
+    p = urlsplit(u)
+    return urlunsplit((p.scheme, p.netloc, quote(p.path), p.query, p.fragment))
+
+
 def fetch_and_convert(url, orig_dir, out_dir, stem):
     os.makedirs(orig_dir, exist_ok=True)
     os.makedirs(out_dir, exist_ok=True)
@@ -82,7 +93,7 @@ def fetch_and_convert(url, orig_dir, out_dir, stem):
     orig = os.path.join(orig_dir, stem + ext)
 
     if not os.path.exists(orig):
-        req = urllib.request.Request(url, headers=UA)
+        req = urllib.request.Request(safe_url(url), headers=UA)
         data = urllib.request.urlopen(req, timeout=60).read()
         if len(data) < 500:
             raise ValueError(f'too small ({len(data)}B)')
@@ -182,7 +193,9 @@ if __name__ == '__main__':
         pid = g(it, 'wp:post_id')
         if want and pid not in want:
             continue
-        entry = classify.get(pid) or {}
+        entry = classify.get(pid)
+        if entry is None:      # 분류표에 없는 글 = 테마 데모. 옮기지 않는다.
+            continue
         section = entry.get('section', '일')
         label = entry.get('label', '')
         print(f'  p{pid} … ', end='', flush=True)
