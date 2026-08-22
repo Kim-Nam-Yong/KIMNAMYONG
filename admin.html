@@ -183,7 +183,10 @@ const db = createClient(cfg.url, cfg.key);
 let entries = [], current = null, dirty = false;
 
 const fmt = d => d ? d.replaceAll('-', '.') : '';
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {           /* toISOString() 은 UTC 라 KST 새벽에 전날로 밀린다 */
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+};
 
 /* ── 인증 ─────────────────────────────────── */
 async function boot() {
