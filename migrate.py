@@ -13,7 +13,8 @@ NS = {'wp': 'http://wordpress.org/export/1.2/',
 UA = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
                     'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'}
 DISPLAY_W = 900
-SECTION_DIR = {'일': '일', '글': '글', '삶': '삶'}
+SECTION_DIR = {'일': '일', '글': '글', '삶': '삶'}          # 원고(소스) 폴더 — 배포 제외라 한글 가능
+SECTION_WEB = {'일': 'work', '글': 'writing', '삶': 'life'}   # 웹 경로 — Vercel 이 한글 경로를 서빙하지 못한다
 
 g = lambda i, t: i.findtext(t, '', NS)
 
@@ -112,8 +113,8 @@ def migrate_post(item, section, att_idx, report):
     slug = f'p{pid}'
     body = g(item, 'content:encoded')
 
-    img_dir = f'images/{SECTION_DIR[section]}/{slug}'
-    org_dir = f'originals/{SECTION_DIR[section]}/{slug}'
+    img_dir = f'images/{SECTION_WEB[section]}/{slug}'
+    org_dir = f'originals/{SECTION_WEB[section]}/{slug}'
     seen, failures = {}, []
 
     def resolve(u):
