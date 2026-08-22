@@ -53,7 +53,7 @@ body{
 .stage{
   height:100vh; height:100dvh;
   display:flex; align-items:center; justify-content:center;
-  padding:14vh clamp(1.5rem,7vw,3rem);
+  padding:9vh clamp(1.5rem,7vw,3rem);
   padding-left:max(clamp(1.5rem,7vw,3rem),var(--edge));
   overflow:hidden;
   transition:opacity .26s var(--ease),filter .26s var(--ease);
@@ -156,30 +156,19 @@ body[data-section="work"] .meta{align-items:flex-start}
 .empty p{font-size:.9rem; line-height:1.8; color:var(--ink-soft); margin:0}
 
 
-/* ─── 공통 GNB (자동 숨김) ──────────────────────────────── */
-.gnb{
-  position:fixed; z-index:45;
-  left:max(1.75rem,var(--edge));
-  top:max(1.4rem,env(safe-area-inset-top,0px));
-  display:flex; gap:clamp(1.25rem,4vw,1.9rem);
-  opacity:1; transition:opacity .5s var(--ease);
-}
-body[data-ui="idle"] .gnb{opacity:0; pointer-events:none}
-body[data-drawer="open"] .gnb{opacity:0; pointer-events:none}
-.gnb:hover,.gnb:focus-within{opacity:1 !important; pointer-events:auto !important}
-.gnb button{
-  font-family:var(--sans); font-size:.82rem; font-weight:400;
-  letter-spacing:.06em; background:none; border:0; cursor:pointer;
-  padding:.4rem .1rem; color:var(--ink-soft);
-  transition:color .18s var(--ease);
-}
-.gnb button:hover{color:var(--ink)}
-.gnb button[aria-current="true"]{color:var(--ink); font-weight:500}
 
-/* 드로어 안의 현재 섹션 라벨 */
-.drawer-label{
-  font-family:var(--sans); font-size:.68rem; letter-spacing:.22em;
-  text-transform:uppercase; color:var(--frost); margin:0;
+/* 드로어 상단 내비 — 화면에 상시 노출되는 UI 는 두지 않는다 */
+.dnav{display:flex; gap:1.5rem; align-items:baseline}
+.dnav button{
+  font-family:var(--sans); font-size:1.05rem; font-weight:500;
+  letter-spacing:.01em; background:none; border:0; cursor:pointer;
+  padding:.2rem 0 .35rem; color:var(--ink-soft);
+  border-bottom:1.5px solid transparent;
+  transition:color .18s var(--ease),border-color .18s var(--ease);
+}
+.dnav button:hover{color:var(--ink)}
+.dnav button[aria-current="true"]{
+  color:var(--ink); font-weight:700; border-bottom-color:var(--accent);
 }
 
 /* ─── 좌측 힌트 / 토글 ──────────────────────────────────── */
@@ -252,7 +241,7 @@ body[data-drawer="open"] .backdrop{opacity:1}
 
 /* 태블릿 이하: 드로어가 조금 넓어지고 백드롭이 작동한다 */
 @media (max-width:1023px){
-  .stage{padding-top:12vh; padding-bottom:12vh}
+  .stage{padding-top:8vh; padding-bottom:8vh}
 }
 
 /* 터치 우선 환경: hover 트리거가 없으므로 상시 토글 버튼을 준다 */
@@ -275,12 +264,10 @@ body[data-drawer="open"] .backdrop{opacity:1}
 @media (max-width:767px){
   :root{--drawer-w:min(78vw,300px)}
   .stage{
-    padding:calc(5.75rem + env(safe-area-inset-top,0px)) 1.5rem 4rem;
+    padding:calc(4.25rem + env(safe-area-inset-top,0px)) 1.5rem 4rem;
     /* 정렬은 길이에 따라 .is-long / .is-free 가 결정한다 —
        여기서 flex-start 를 강제하면 짧은 글의 중앙 고정이 깨진다 */
   }
-  /* 좌상단 토글 버튼과 겹치지 않도록 GNB를 오른쪽으로 밀어둔다 */
-  .gnb{left:calc(max(.75rem,var(--edge)) + 52px)}
   /* 짧은 글은 화면 정가운데 — 상하 패딩이 비대칭이면 그만큼 어긋난다 */
   .stage:not(.is-long):not(.is-free){padding-top:4rem; padding-bottom:4rem}
   .drawer{box-shadow:1px 0 0 var(--frost-faint)}
@@ -297,13 +284,12 @@ body[data-drawer="open"] .backdrop{opacity:1}
 </head>
 <body data-drawer="closed">
 
-<nav class="gnb" id="gnb" aria-label="섹션"></nav>
 
 <button class="hint" id="hint" aria-label="목록 열기" aria-expanded="false" aria-controls="drawer"></button>
 <button class="backdrop" id="backdrop" tabindex="-1" aria-label="목록 닫기"></button>
 
 <nav class="drawer" id="drawer" aria-label="주요 메뉴">
-  <p class="drawer-label" id="drawerLabel">글</p>
+  <div class="dnav" id="dnav" role="tablist"></div>
   <hr class="rule">
   <ul class="titles" id="titles"></ul>
   <p class="sig">Kim Nam Yong</p>
@@ -1186,7 +1172,7 @@ const EMPTY={
 
 const body=document.body, hint=document.getElementById('hint'),
       backdrop=document.getElementById('backdrop'), drawer=document.getElementById('drawer'),
-      elGnb=document.getElementById('gnb'), elLabel=document.getElementById('drawerLabel'), elTitles=document.getElementById('titles'),
+      elNav=document.getElementById('dnav'), elTitles=document.getElementById('titles'),
       elReading=document.getElementById('reading'),
       stage=document.getElementById('stage'), roller=document.getElementById('roller');
 
@@ -1241,17 +1227,6 @@ addEventListener('touchmove',e=>{
 },{passive:true});
 addEventListener('touchend',()=>{sx=null;},{passive:true});
 
-
-/* ── GNB 자동 숨김 ───────────────────────────── */
-let idleT=null;
-function activity(){
-  body.dataset.ui='active';
-  clearTimeout(idleT);
-  idleT=setTimeout(()=>{ body.dataset.ui='idle'; },3000);
-}
-['pointermove','pointerdown','keydown','scroll','touchstart','wheel']
-  .forEach(ev=>addEventListener(ev,activity,{passive:true}));
-activity();
 
 
 /* ── 자동 롤링 ───────────────────────────────── */
@@ -1343,8 +1318,8 @@ async function loadLife(){
 }
 
 /* ── 렌더 ────────────────────────────────────── */
-function renderGnb(){
-  elGnb.innerHTML='';
+function renderNav(){
+  elNav.innerHTML='';
   for(const [k,v] of Object.entries(SECTIONS)){
     const b=document.createElement('button');
     b.type='button'; b.textContent=v.label;
@@ -1352,11 +1327,10 @@ function renderGnb(){
     b.addEventListener('click',()=>{
       section=k; preview=null;
       current=SECTIONS[k].items[0]||null;
-      elLabel.textContent=v.label;
-      renderGnb(); renderTitles(); render(); activity();
+      renderNav(); renderTitles(); render();
       if(k==='life') loadLife();
     });
-    elGnb.appendChild(b);
+    elNav.appendChild(b);
   }
 }
 function renderTitles(){
@@ -1441,7 +1415,7 @@ function paint(){
   elReading.innerHTML=h;
 }
 function render(){ body.dataset.section=section; paint(); layout(); }
-renderGnb(); renderTitles(); render();
+renderNav(); renderTitles(); render();
 </script>
 </body>
 </html>
