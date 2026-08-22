@@ -95,6 +95,46 @@ body[data-drawer="open"] .stage{opacity:.2; filter:blur(1px)}
   margin:0 0 1.7em; text-wrap:pretty;
 }
 .para:last-child{margin-bottom:0}
+
+/* 「일」 소제목 */
+.h2{
+  font-family:var(--serif); font-weight:600;
+  font-size:clamp(1.1rem,1rem + .5vw,1.32rem); line-height:1.5;
+  letter-spacing:-.015em; text-wrap:balance;
+  margin:clamp(3.25rem,8vw,4.75rem) 0 1.6rem;
+}
+/* 그림 — 본문(560px)보다 넓게, 화면 중앙 기준으로 펼친다 */
+.figure{
+  width:900px; max-width:calc(100vw - 3rem);
+  margin:clamp(2.5rem,6vw,3.5rem) 0;
+  margin-left:50%; transform:translateX(-50%);
+}
+.figure img{
+  display:block; width:100%; height:auto;
+  border:1px solid var(--frost-faint);
+}
+
+/* 「일」은 긴 산문이라 왼쪽 정렬 — 가운데 정렬은 줄 시작점이 매번 달라져 읽기 힘들다.
+   그림은 그대로 화면 중앙에 둔다. */
+/* 이미지가 많은 글 — 격자로 깔아 훑을 수 있게 한다 */
+.gallery{
+  width:900px; max-width:calc(100vw - 3rem);
+  margin:clamp(2.5rem,6vw,3.5rem) 0;
+  margin-left:50%; transform:translateX(-50%);
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:1rem; align-items:start;
+}
+.gallery figure{margin:0}
+.gallery img{
+  display:block; width:100%; height:auto;
+  border:1px solid var(--frost-faint);
+}
+@media (max-width:640px){
+  .gallery{grid-template-columns:repeat(2,1fr); gap:.6rem}
+}
+
+body[data-section="work"] .roller{text-align:left}
+body[data-section="work"] .meta{align-items:flex-start}
 .stanza-no{
   font-family:var(--sans); font-size:.7rem; font-weight:500;
   letter-spacing:.2em; color:var(--frost);
@@ -283,7 +323,7 @@ const DATA = /*__DATA__*/null;
 const OPEN_X=16, CLOSE_X=300, OPEN_DELAY=120, CLOSE_DELAY=200;
 
 const SECTIONS={
-  work:{label:'일', items:[]},
+  work:{label:'일', items:DATA.work||[]},
   writing:{label:'글', items:DATA.writing.concat([
     {slug:'p1',title:'말이 남는 자리',pending:true},
     {slug:'p2',title:'쓰지 않기로 한 문장',pending:true}
@@ -386,7 +426,7 @@ function layout(){
   if(h>avail+1){                       /* 길다 → 롤링 */
     stage.classList.add('is-long');
     dist=h-avail;
-    if(reduce.matches){ stage.classList.add('is-free'); freed=true; }
+    if(reduce.matches||section==='work'){ stage.classList.add('is-free'); freed=true; }
     else { phase='hold-start'; raf=requestAnimationFrame(step); }
   } else { dist=0; }                   /* 짧다 → 화면 가운데 고정 */
 }
@@ -504,6 +544,34 @@ function paint(){
     return;
   }
   elReading.className='reading';
+  if(it.blocks){
+    let h='<h1 class="title">'+esc(it.title)+'</h1>';
+    it.blocks.forEach(b=>{
+      if(b.t==='gallery'){
+        h+='<div class="gallery">'+b.items.map(g=>{
+          const d=(g.w&&g.h)?' width="'+g.w+'" height="'+g.h+'"':'';
+          return '<figure><img src="'+esc(g.src)+'" alt="'+esc(g.alt)+'"'+d+' loading="lazy"></figure>';
+        }).join('')+'</div>';
+      } else if(b.t==='img'){
+        const dim=(b.w&&b.h)?' width="'+b.w+'" height="'+b.h+'"':'';
+        h+='<figure class="figure"><img src="'+esc(b.src)+'" alt="'+esc(b.alt)+'"'+dim+' loading="lazy"></figure>';
+      } else if(b.t==='h'){
+        h+='<h2 class="h2">'+esc(b.v)+'</h2>';
+      } else {
+        h+='<p class="para">'+esc(b.v).replace(/\n/g,'<br>')+'</p>';
+      }
+    });
+    const meta=[it.period,it.org,it.role].filter(Boolean);
+    if(meta.length) h+='<p class="meta">'+meta.map(v=>'<span>'+esc(v)+'</span>').join('')+'</p>';
+    elReading.innerHTML=h;
+    /* 이미지가 늦게 뜨면 높이가 바뀌므로 다시 계산한다 */
+    elReading.querySelectorAll('img').forEach(im=>{
+      /* 일반 스크롤 모드에서는 브라우저가 알아서 재배치한다.
+         여기서 layout() 을 부르면 읽던 위치가 맨 위로 튕긴다. */
+      if(!im.complete) im.addEventListener('load',()=>{ if(!freed) layout(); },{once:true});
+    });
+    return;
+  }
   if(it.prose){
     elReading.innerHTML='<h1 class="title">'+esc(it.title)+'</h1>'+
       it.prose.split(/\n{2,}/).map(t=>'<p class="para">'+esc(t).replace(/\n/g,'<br>')+'</p>').join('');
@@ -523,7 +591,7 @@ function paint(){
      '<span class="award">'+it.award+'</span></p>';
   elReading.innerHTML=h;
 }
-function render(){ paint(); layout(); }
+function render(){ body.dataset.section=section; paint(); layout(); }
 renderGnb(); renderTitles(); render();
 </script>
 </body>
