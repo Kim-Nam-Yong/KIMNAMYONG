@@ -7,3 +7,4 @@ kimnamyong/
 
 # macOS
 .DS_Store
+.env*
