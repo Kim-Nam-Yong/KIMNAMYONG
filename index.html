@@ -87,6 +87,14 @@ body[data-drawer="open"] .stage{opacity:.2; filter:blur(1px)}
 
 .stanza{margin:0 0 clamp(2.25rem,6vw,3.25rem)}
 .stanza:last-of-type{margin-bottom:0}
+/* 「삶」 산문 문단 */
+.para{
+  font-family:var(--serif); font-weight:440;
+  font-size:clamp(1rem,.95rem + .35vw,1.125rem);
+  line-height:2.05; letter-spacing:-.01em;
+  margin:0 0 1.7em; text-wrap:pretty;
+}
+.para:last-child{margin-bottom:0}
 .stanza-no{
   font-family:var(--sans); font-size:.7rem; font-weight:500;
   letter-spacing:.2em; color:var(--frost);
@@ -267,6 +275,7 @@ body[data-drawer="open"] .backdrop{opacity:1}
   </div>
 </main>
 
+<script src="./supabase-config.js"></script>
 <script>
 const DATA = {
   "writing": [
@@ -364,7 +373,7 @@ const SECTIONS={
 };
 const EMPTY={
   work:{h:'일', p:'UX 프로젝트 케이스가 이 자리에 들어갑니다.'},
-  life:{h:'삶', p:'매일의 단상은 Admin에서 씁니다. 날짜가 곧 제목이 되고, 일과 글은 파일로 관리합니다.'}
+  life:{h:'삶', p:'아직 기록이 없습니다.'}
 };
 
 const body=document.body, hint=document.getElementById('hint'),
@@ -497,6 +506,34 @@ stage.addEventListener('touchmove',freeScroll,{passive:true});
 addEventListener('resize',()=>{ if(!freed) layout(); },{passive:true});
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>layout());
 
+
+/* ── 「삶」 — Supabase 지연 로드 ─────────────── */
+function esc(t){ return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let lifeState='idle';   /* idle | loading | done | off */
+async function loadLife(){
+  if(lifeState==='loading'||lifeState==='done') return;
+  const cfg=window.SUPABASE_CONFIG||{};
+  if(!cfg.url||!cfg.key){ lifeState='off'; return; }
+  lifeState='loading';
+  if(section==='life'){ render(); }
+  try{
+    const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const db=createClient(cfg.url,cfg.key);
+    const {data,error}=await db.from('life_entries')
+      .select('id,written_on,body').eq('published',true)
+      .order('written_on',{ascending:false}).order('created_at',{ascending:false});
+    if(error) throw error;
+    SECTIONS.life.items=(data||[]).map(e=>({
+      slug:e.id, title:String(e.written_on).replaceAll('-','.'), prose:e.body
+    }));
+    lifeState='done';
+  }catch(err){ lifeState='off'; }
+  if(section==='life'){
+    current=SECTIONS.life.items[0]||null;
+    renderTitles(); render();
+  }
+}
+
 /* ── 렌더 ────────────────────────────────────── */
 function renderGnb(){
   elGnb.innerHTML='';
@@ -509,6 +546,7 @@ function renderGnb(){
       current=SECTIONS[k].items[0]||null;
       elLabel.textContent=v.label;
       renderGnb(); renderTitles(); render(); activity();
+      if(k==='life') loadLife();
     });
     elGnb.appendChild(b);
   }
@@ -537,12 +575,21 @@ function renderTitles(){
 function paint(){
   const it=preview||current;
   if(!it){
+    if(section==='life'&&lifeState==='loading'){
+      elReading.className='empty';
+      elReading.innerHTML='<h2>삶</h2><p>불러오는 중…</p>'; return;
+    }
     const e=EMPTY[section]||{h:'',p:''};
     elReading.className='empty';
     elReading.innerHTML='<h2>'+e.h+'</h2><p>'+e.p+'</p>';
     return;
   }
   elReading.className='reading';
+  if(it.prose){
+    elReading.innerHTML='<h1 class="title">'+esc(it.title)+'</h1>'+
+      it.prose.split(/\n{2,}/).map(t=>'<p class="para">'+esc(t).replace(/\n/g,'<br>')+'</p>').join('');
+    return;
+  }
   if(it.pending){
     elReading.className='empty';
     elReading.innerHTML='<h2>'+it.title+'</h2><p>이 자리에 원고가 들어갑니다.</p>';
