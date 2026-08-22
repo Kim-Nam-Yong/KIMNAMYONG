@@ -105,7 +105,7 @@ def fetch_and_convert(url, orig_dir, out_dir, stem):
 
 
 # ── 한 편 이관 ───────────────────────────────────────────
-def migrate_post(item, section, att_idx, report):
+def migrate_post(item, section, att_idx, report, label=''):
     pid = g(item, 'wp:post_id')
     title = (item.findtext('title') or '').strip()
     date = g(item, 'wp:post_date')[:10]
@@ -154,7 +154,7 @@ def migrate_post(item, section, att_idx, report):
         else:
             lines.append(b)
 
-    fm = (f'---\ntitle: {title}\nyear: {year}\ndate: {date}\n'
+    fm = (f'---\ntitle: {title}\nlabel: {label or title}\nyear: {year}\ndate: {date}\n'
           f'section: {section}\nsource: http://www.bookdodook.com/?p={pid}\n---\n\n')
     path = f'{SECTION_DIR[section]}/{slug}.mdx'
     os.makedirs(SECTION_DIR[section], exist_ok=True)
@@ -182,9 +182,11 @@ if __name__ == '__main__':
         pid = g(it, 'wp:post_id')
         if want and pid not in want:
             continue
-        section = classify.get(pid, '일')
+        entry = classify.get(pid) or {}
+        section = entry.get('section', '일')
+        label = entry.get('label', '')
         print(f'  p{pid} … ', end='', flush=True)
-        migrate_post(it, section, att_idx, report)
+        migrate_post(it, section, att_idx, report, label)
         r = report[-1]
         print(f'{r["section"]} / {r["chars"]}자 / 이미지 {r["images"]}개'
               + (f' / 실패 {len(r["failures"])}' if r['failures'] else ''))

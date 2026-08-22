@@ -217,13 +217,6 @@ body[data-drawer="open"] .drawer{transform:translateX(0); opacity:1}
   opacity:0; transition:opacity .18s var(--ease); transform:translateY(-.3em);
 }
 .titles button:hover .dash{opacity:.45}
-.t-year{
-  margin-left:auto; font-family:var(--sans); font-size:.7rem;
-  color:var(--frost); opacity:0; transition:opacity .18s var(--ease);
-  font-variant-numeric:tabular-nums; flex:none;
-}
-.titles button:hover .t-year,.titles button[aria-current="true"] .t-year{opacity:1}
-
 .sig{
   font-size:.68rem; letter-spacing:.22em; color:var(--frost);
   margin:0; text-transform:uppercase;
@@ -496,8 +489,7 @@ function renderTitles(){
     const li=document.createElement('li');
     const b=document.createElement('button');
     b.type='button';
-    b.innerHTML='<span class="dash"></span>'+it.title+
-      (it.year?'<span class="t-year">'+it.year+'</span>':'');
+    b.innerHTML='<span class="dash"></span>'+(it.label||it.title);
     b.setAttribute('aria-current',String(current&&current.slug===it.slug));
     /* hover = 프리뷰, click = 확정 */
     b.addEventListener('pointerenter',()=>{ if(fine.matches){preview=it; render();} });
