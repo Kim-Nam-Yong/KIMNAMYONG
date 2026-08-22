@@ -1,0 +1,9 @@
+# Vercel 로컬 링크 (프로젝트별 ID — 저장소에 넣지 않는다)
+.vercel
+
+# 빌드 산출물 · 스테이징
+artifact.html
+kimnamyong/
+
+# macOS
+.DS_Store

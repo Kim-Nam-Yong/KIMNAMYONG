@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KIMNAMYONG</title>
+<meta name="description" content="김남용 — 일, 글, 삶.">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<style>
+/* ─── 토큰 ─────────────────────────────────────────────── */
+:root{
+  --paper:#FFFFFF;
+  --ink:#16181C;
+  --ink-soft:#6E7681;
+  --frost:#C9CFD6;
+  --frost-faint:#E7EBEF;
+  --accent:#3A5A78;
+  --scrim:rgba(12,14,17,.34);
+
+  /* 전 요소 Pretendard 단일 서체 — 두 변수는 이름만 남기고 같은 스택을 가리킨다 */
+  --serif:"Pretendard Variable",Pretendard,-apple-system,'Apple SD Gothic Neo',system-ui,sans-serif;
+  --sans:"Pretendard Variable",Pretendard,-apple-system,'Apple SD Gothic Neo',system-ui,sans-serif;
+
+  --drawer-w:260px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --edge:env(safe-area-inset-left,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C0E11; --ink:#E4E6E9; --ink-soft:#8C949E;
+    --frost:#333A44; --frost-faint:#1A1E23;
+    --accent:#7FA6C4; --scrim:rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C0E11; --ink:#E4E6E9; --ink-soft:#8C949E;
+  --frost:#333A44; --frost-faint:#1A1E23;
+  --accent:#7FA6C4; --scrim:rgba(0,0,0,.55);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); overflow-x:hidden;
+  min-height:100vh; min-height:100dvh;
+  -webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+
+/* ─── 읽기 무대 ─────────────────────────────────────────── */
+.stage{
+  height:100vh; height:100dvh;
+  display:flex; align-items:center; justify-content:center;
+  padding:14vh clamp(1.5rem,7vw,3rem);
+  padding-left:max(clamp(1.5rem,7vw,3rem),var(--edge));
+  overflow:hidden;
+  transition:opacity .26s var(--ease),filter .26s var(--ease);
+}
+body[data-drawer="open"] .stage{opacity:.2; filter:blur(1px)}
+
+/* 긴 글: 위에서부터 쌓고 자동 롤링 */
+.stage.is-long{align-items:flex-start}
+/* 사용자가 스크롤로 개입하면 제어권을 넘긴다 (스크롤바는 숨김) */
+.stage.is-free{overflow-y:auto; align-items:flex-start; scrollbar-width:none}
+.stage.is-free::-webkit-scrollbar{display:none}
+
+.roller{width:100%; max-width:560px; will-change:transform; text-align:center}
+.reading[hidden]{display:none}
+
+/* 출처·수상 정보 — 본문 아래, 충분한 여백을 두고 세로로 쌓는다 */
+.meta{
+  font-size:.75rem; font-weight:400; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-soft);
+  display:flex; flex-direction:column; align-items:center; gap:.55rem;
+  margin:clamp(5.5rem,15vw,9.5rem) 0 0; line-height:1.5;
+}
+.meta .award{color:var(--accent)}
+
+.title{
+  font-family:var(--serif); font-weight:700;
+  font-size:clamp(1.75rem,1.4rem + 1.7vw,2.4rem);
+  line-height:1.35; letter-spacing:-.02em;
+  margin:0 0 clamp(2.75rem,7vw,4rem); text-wrap:balance;
+}
+
+.stanza{margin:0 0 clamp(2.25rem,6vw,3.25rem)}
+.stanza:last-of-type{margin-bottom:0}
+.stanza-no{
+  font-family:var(--sans); font-size:.7rem; font-weight:500;
+  letter-spacing:.2em; color:var(--frost);
+  display:block; margin-bottom:1.1rem;
+}
+.line{
+  font-family:var(--serif); font-weight:440;   /* 기본 400 대비 +10% */
+  font-size:clamp(1rem,.95rem + .35vw,1.125rem);
+  line-height:2.05; letter-spacing:-.01em;
+  margin:0; text-wrap:pretty;
+}
+
+/* 빈 상태 */
+.empty{width:100%}
+.empty h2{
+  font-family:var(--serif); font-size:1.5rem; font-weight:400;
+  margin:0 0 .75rem; color:var(--ink);
+}
+.empty p{font-size:.9rem; line-height:1.8; color:var(--ink-soft); margin:0}
+
+
+/* ─── 공통 GNB (자동 숨김) ──────────────────────────────── */
+.gnb{
+  position:fixed; z-index:45;
+  left:max(1.75rem,var(--edge));
+  top:max(1.4rem,env(safe-area-inset-top,0px));
+  display:flex; gap:clamp(1.25rem,4vw,1.9rem);
+  opacity:1; transition:opacity .5s var(--ease);
+}
+body[data-ui="idle"] .gnb{opacity:0; pointer-events:none}
+body[data-drawer="open"] .gnb{opacity:0; pointer-events:none}
+.gnb:hover,.gnb:focus-within{opacity:1 !important; pointer-events:auto !important}
+.gnb button{
+  font-family:var(--sans); font-size:.82rem; font-weight:400;
+  letter-spacing:.06em; background:none; border:0; cursor:pointer;
+  padding:.4rem .1rem; color:var(--ink-soft);
+  transition:color .18s var(--ease);
+}
+.gnb button:hover{color:var(--ink)}
+.gnb button[aria-current="true"]{color:var(--ink); font-weight:500}
+
+/* 드로어 안의 현재 섹션 라벨 */
+.drawer-label{
+  font-family:var(--sans); font-size:.68rem; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--frost); margin:0;
+}
+
+/* ─── 좌측 힌트 / 토글 ──────────────────────────────────── */
+.hint{
+  position:fixed; top:0; bottom:0; left:0; width:2px;
+  background:var(--ink); opacity:.12; border:0; padding:0;
+  z-index:30; cursor:pointer;
+  transition:opacity .2s var(--ease);
+}
+.hint:hover{opacity:.3}
+body[data-drawer="open"] .hint{opacity:0; pointer-events:none}
+
+/* ─── 드로어 ───────────────────────────────────────────── */
+.drawer{
+  position:fixed; inset:0 auto 0 0; z-index:40;
+  width:var(--drawer-w);
+  padding:clamp(2rem,5vh,3rem) 0 clamp(1.5rem,4vh,2.25rem);
+  padding-left:max(1.75rem,var(--edge));
+  padding-right:1.25rem;
+  background:var(--paper);
+  display:flex; flex-direction:column; gap:2.5rem;
+  transform:translateX(-100%); opacity:0;
+  transition:transform .26s var(--ease),opacity .2s var(--ease);
+  overflow-y:auto; overscroll-behavior:contain;
+}
+body[data-drawer="open"] .drawer{transform:translateX(0); opacity:1}
+
+
+.rule{height:1px; background:var(--frost-faint); margin:0}
+
+.titles{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.15rem; flex:1}
+.titles button{
+  font-family:var(--serif); font-size:.95rem; font-weight:400;
+  background:none; border:0; padding:.55rem 0; cursor:pointer;
+  color:var(--ink-soft); text-align:left; width:100%;
+  display:flex; align-items:baseline; gap:.55rem;
+  transition:color .18s var(--ease);
+}
+.titles button:hover,.titles button:focus-visible{color:var(--ink)}
+.titles button[aria-current="true"]{color:var(--accent)}
+.titles button[aria-current="true"] .dash{opacity:1}
+.titles button[disabled]{color:var(--frost); cursor:default}
+.titles button[disabled]:hover{color:var(--frost)}
+.dash{
+  flex:none; width:.75rem; height:1px; background:currentColor;
+  opacity:0; transition:opacity .18s var(--ease); transform:translateY(-.3em);
+}
+.titles button:hover .dash{opacity:.45}
+.t-year{
+  margin-left:auto; font-family:var(--sans); font-size:.7rem;
+  color:var(--frost); opacity:0; transition:opacity .18s var(--ease);
+  font-variant-numeric:tabular-nums; flex:none;
+}
+.titles button:hover .t-year,.titles button[aria-current="true"] .t-year{opacity:1}
+
+.sig{
+  font-size:.68rem; letter-spacing:.22em; color:var(--frost);
+  margin:0; text-transform:uppercase;
+}
+
+/* ─── 백드롭 (터치 환경) ────────────────────────────────── */
+.backdrop{
+  position:fixed; inset:0; z-index:35; background:var(--scrim);
+  opacity:0; pointer-events:none; transition:opacity .26s var(--ease);
+  border:0; padding:0;
+}
+body[data-drawer="open"] .backdrop{opacity:1}
+
+/* ─── 반응형 ───────────────────────────────────────────── */
+
+/* 태블릿 이하: 드로어가 조금 넓어지고 백드롭이 작동한다 */
+@media (max-width:1023px){
+  .stage{padding-top:12vh; padding-bottom:12vh}
+}
+
+/* 터치 우선 환경: hover 트리거가 없으므로 상시 토글 버튼을 준다 */
+@media (hover:none),(pointer:coarse),(max-width:767px){
+  .hint{
+    top:max(.75rem,env(safe-area-inset-top,0px)); bottom:auto;
+    left:max(.75rem,var(--edge));
+    width:44px; height:44px; opacity:1;
+    display:grid; place-items:center;
+    background:none; border-radius:50%;
+  }
+  .hint::before{
+    content:""; width:14px; height:1px; background:var(--ink);
+    box-shadow:0 5px 0 var(--ink),0 -5px 0 var(--ink); opacity:.45;
+  }
+  .hint:hover{opacity:1}
+  body[data-drawer="open"] .backdrop{pointer-events:auto}
+}
+
+@media (max-width:767px){
+  :root{--drawer-w:min(78vw,300px)}
+  .stage{
+    padding:calc(5.75rem + env(safe-area-inset-top,0px)) 1.5rem 4rem;
+    /* 정렬은 길이에 따라 .is-long / .is-free 가 결정한다 —
+       여기서 flex-start 를 강제하면 짧은 글의 중앙 고정이 깨진다 */
+  }
+  /* 좌상단 토글 버튼과 겹치지 않도록 GNB를 오른쪽으로 밀어둔다 */
+  .gnb{left:calc(max(.75rem,var(--edge)) + 52px)}
+  /* 짧은 글은 화면 정가운데 — 상하 패딩이 비대칭이면 그만큼 어긋난다 */
+  .stage:not(.is-long):not(.is-free){padding-top:4rem; padding-bottom:4rem}
+  .drawer{box-shadow:1px 0 0 var(--frost-faint)}
+  .titles button{padding:.7rem 0}   /* 터치 타깃 확보 */
+  .meta{font-size:.68rem; gap:.4rem .7rem}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+  .drawer{transition:opacity .1s linear}
+  .stage{filter:none !important}
+}
+</style>
+</head>
+<body data-drawer="closed">
+
+<nav class="gnb" id="gnb" aria-label="섹션"></nav>
+
+<button class="hint" id="hint" aria-label="목록 열기" aria-expanded="false" aria-controls="drawer"></button>
+<button class="backdrop" id="backdrop" tabindex="-1" aria-label="목록 닫기"></button>
+
+<nav class="drawer" id="drawer" aria-label="주요 메뉴">
+  <p class="drawer-label" id="drawerLabel">글</p>
+  <hr class="rule">
+  <ul class="titles" id="titles"></ul>
+  <p class="sig">Kim Nam Yong</p>
+</nav>
+
+<main class="stage" id="stage">
+  <div class="roller" id="roller">
+    <article class="reading" id="reading"></article>
+  </div>
+</main>
+
+<script>
+const DATA = {
+  "writing": [
+    {
+      "slug": "gyeoulsae",
+      "title": "겨울새",
+      "year": "1992",
+      "outlet": "제25회 한양대학교 한대신문 학술상",
+      "award": "우수상",
+      "stanzas": [
+        {
+          "no": "I",
+          "lines": [
+            "철이 되면 철새로",
+            "너희들은 내게로 오지",
+            "얼마나 머무를까",
+            "늦여름부터 설레어 주던",
+            "예년의 코스모스 밭은",
+            "콘크리트 속으로 숨고",
+            "하늘을 돌며",
+            "하늘을 돌며",
+            "내리지 못하는 날갯짓을",
+            "곁눈으로 훔치던 나는",
+            "창문 닫고 돌아 누워",
+            "얼.마.나.머.무.를.까."
+          ]
+        },
+        {
+          "no": "II",
+          "lines": [
+            "철이 되면 철새로 와서",
+            "철이 되면 철새로 가버리며",
+            "봄마다 실연(실연)을 주던 너희들은",
+            "이 땅에게도 시련이었겠지",
+            "초가을부터 여민",
+            "단단한 옷깃 사이로",
+            "너희들의 고향보다",
+            "더 찬 바람이 불고",
+            "나는 성에 낀 창문 열고",
+            "훠-이. 훠-이. 소리친다.",
+            "돌아가다오. 내리지 말고.",
+            "한발작도 딛지 말고."
+          ]
+        },
+        {
+          "no": "III",
+          "lines": [
+            "첫 서리는 가루약처럼",
+            "드문 드문",
+            "하늘에 번져",
+            "그 서리는",
+            "몸살져 누운",
+            "이 땅의 이마를 어루만지고,",
+            "눈가루는 표백제마냥",
+            "희뿌옇게",
+            "하늘을 탈색시켜",
+            "새들은 부스럭거리며",
+            "하늘을 지쳐 힘겹게 날고."
+          ]
+        },
+        {
+          "no": "IV",
+          "lines": [
+            "그 뒤로 그 마을엔",
+            "겨울새가 날지 않았고",
+            "아무도",
+            "새의 소식을 묻지 않았다",
+            "한 구석, 농담처럼",
+            "꽃은 피고",
+            "옷깃 풀기 시작한",
+            "사람 몇몇",
+            "남쪽에서 날아와, 주춤",
+            "내리지 못하는",
+            "몇 마리 새에게",
+            "겸연쩍게 등돌려 서는",
+            "그 뒤의 그 마을엔"
+          ]
+        }
+      ],
+      "credit": "– 1992. 제25회 한양대학교 한대신문 학술상 당선작 (우수상)"
+    }
+  ]
+};
+
+/* 튜닝값 — 기획서 2.3 */
+const OPEN_X=16, CLOSE_X=300, OPEN_DELAY=120, CLOSE_DELAY=200;
+
+const SECTIONS={
+  work:{label:'일', items:[]},
+  writing:{label:'글', items:DATA.writing.concat([
+    {slug:'p1',title:'말이 남는 자리',pending:true},
+    {slug:'p2',title:'쓰지 않기로 한 문장',pending:true}
+  ])},
+  life:{label:'삶', items:[]}
+};
+const EMPTY={
+  work:{h:'일', p:'UX 프로젝트 케이스가 이 자리에 들어갑니다.'},
+  life:{h:'삶', p:'매일의 단상은 Admin에서 씁니다. 날짜가 곧 제목이 되고, 일과 글은 파일로 관리합니다.'}
+};
+
+const body=document.body, hint=document.getElementById('hint'),
+      backdrop=document.getElementById('backdrop'), drawer=document.getElementById('drawer'),
+      elGnb=document.getElementById('gnb'), elLabel=document.getElementById('drawerLabel'), elTitles=document.getElementById('titles'),
+      elReading=document.getElementById('reading'),
+      stage=document.getElementById('stage'), roller=document.getElementById('roller');
+
+let section='writing', current=SECTIONS.writing.items[0], preview=null, open=null;
+
+/* ── 드로어 개폐 ─────────────────────────────── */
+function setOpen(v){
+  if(open===v) return;
+  open=v;
+  body.dataset.drawer=v?'open':'closed';
+  hint.setAttribute('aria-expanded',String(v));
+  drawer.toggleAttribute('inert',!v);
+  if(!v && preview){preview=null; render();}
+}
+setOpen(false);
+
+hint.addEventListener('click',e=>{e.stopPropagation(); setOpen(!open);});
+backdrop.addEventListener('click',()=>setOpen(false));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&open){setOpen(false); hint.focus();}
+});
+
+/* ── 데스크톱: 엣지 호버 + 히스테리시스 ────────── */
+const fine=matchMedia('(hover:hover) and (pointer:fine) and (min-width:768px)');
+let tOpen=null,tClose=null;
+function onMove(e){
+  const x=e.clientX;
+  if(!open){
+    if(x<=OPEN_X){ if(tOpen===null) tOpen=setTimeout(()=>{tOpen=null; setOpen(true);},OPEN_DELAY); }
+    else if(tOpen!==null){clearTimeout(tOpen); tOpen=null;}
+  }else{
+    if(x>=CLOSE_X){ if(tClose===null) tClose=setTimeout(()=>{tClose=null; setOpen(false);},CLOSE_DELAY); }
+    else if(tClose!==null){clearTimeout(tClose); tClose=null;}
+  }
+}
+function bindFine(){
+  window.removeEventListener('pointermove',onMove);
+  if(fine.matches) window.addEventListener('pointermove',onMove,{passive:true});
+}
+bindFine(); fine.addEventListener('change',bindFine);
+
+/* ── 터치: 좌측 엣지 스와이프 ───────────────── */
+let sx=null,sy=null;
+addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  if(!open && t.clientX<=24){sx=t.clientX; sy=t.clientY;}
+},{passive:true});
+addEventListener('touchmove',e=>{
+  if(sx===null) return;
+  const t=e.touches[0];
+  if(t.clientX-sx>40 && Math.abs(t.clientY-sy)<50){setOpen(true); sx=null;}
+},{passive:true});
+addEventListener('touchend',()=>{sx=null;},{passive:true});
+
+
+/* ── GNB 자동 숨김 ───────────────────────────── */
+let idleT=null;
+function activity(){
+  body.dataset.ui='active';
+  clearTimeout(idleT);
+  idleT=setTimeout(()=>{ body.dataset.ui='idle'; },3000);
+}
+['pointermove','pointerdown','keydown','scroll','touchstart','wheel']
+  .forEach(ev=>addEventListener(ev,activity,{passive:true}));
+activity();
+
+
+/* ── 자동 롤링 ───────────────────────────────── */
+const ROLL_SPEED=18,      /* px/초 — 굉장히 느리게 */
+      START_HOLD=2600,    /* 시작 전 정지 */
+      END_HOLD=2600,      /* 끝에서 정지 */
+      RETURN_MS=1200;     /* 처음 위치로 복귀 */
+const reduce=matchMedia('(prefers-reduced-motion:reduce)');
+let raf=null,phase='idle',last=0,acc=0,y=0,dist=0,retFrom=0,freed=false;
+
+function cancelRoll(){ if(raf){cancelAnimationFrame(raf);raf=null;} phase='idle'; last=0; acc=0; }
+function easeInOut(p){ return p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2; }
+
+function layout(){
+  cancelRoll(); freed=false;
+  stage.classList.remove('is-long','is-free');
+  stage.scrollTop=0; roller.style.transform='translateY(0)'; y=0;
+  const cs=getComputedStyle(stage);
+  const avail=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  const h=roller.offsetHeight;
+  if(h>avail+1){                       /* 길다 → 롤링 */
+    stage.classList.add('is-long');
+    dist=h-avail;
+    if(reduce.matches){ stage.classList.add('is-free'); freed=true; }
+    else { phase='hold-start'; raf=requestAnimationFrame(step); }
+  } else { dist=0; }                   /* 짧다 → 화면 가운데 고정 */
+}
+
+function step(now){
+  if(!last) last=now;
+  const dt=now-last; last=now;
+  if(!open){                           /* 드로어가 열려 있는 동안은 정지 */
+    acc+=dt;
+    if(phase==='hold-start'){ if(acc>=START_HOLD){phase='rolling'; acc=0;} }
+    else if(phase==='rolling'){
+      y=Math.min(dist,(acc/1000)*ROLL_SPEED);
+      if(y>=dist){ phase='hold-end'; acc=0; retFrom=y; }
+    }
+    else if(phase==='hold-end'){ if(acc>=END_HOLD){phase='returning'; acc=0;} }
+    else if(phase==='returning'){
+      const p=Math.min(1,acc/RETURN_MS);
+      y=retFrom*(1-easeInOut(p));
+      if(p>=1){ y=0; phase='done'; }   /* 처음 위치에서 고정 */
+    }
+    roller.style.transform='translateY('+(-y)+'px)';
+  }
+  if(phase!=='done'&&phase!=='idle') raf=requestAnimationFrame(step); else raf=null;
+}
+
+/* 사용자가 직접 스크롤하면 롤링을 멈추고 제어권을 넘긴다 */
+function freeScroll(){
+  if(freed||sx!==null||!stage.classList.contains('is-long')) return;
+  cancelRoll(); freed=true;
+  roller.style.transform='translateY(0)';
+  stage.classList.add('is-free');
+  stage.scrollTop=y;
+}
+stage.addEventListener('wheel',freeScroll,{passive:true});
+stage.addEventListener('touchmove',freeScroll,{passive:true});
+addEventListener('resize',()=>{ if(!freed) layout(); },{passive:true});
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>layout());
+
+/* ── 렌더 ────────────────────────────────────── */
+function renderGnb(){
+  elGnb.innerHTML='';
+  for(const [k,v] of Object.entries(SECTIONS)){
+    const b=document.createElement('button');
+    b.type='button'; b.textContent=v.label;
+    b.setAttribute('aria-current',String(k===section));
+    b.addEventListener('click',()=>{
+      section=k; preview=null;
+      current=SECTIONS[k].items[0]||null;
+      elLabel.textContent=v.label;
+      renderGnb(); renderTitles(); render(); activity();
+    });
+    elGnb.appendChild(b);
+  }
+}
+function renderTitles(){
+  elTitles.innerHTML='';
+  const items=SECTIONS[section].items;
+  if(!items.length){
+    const li=document.createElement('li');
+    li.innerHTML='<button type="button" disabled><span class="dash"></span>준비 중</button>';
+    elTitles.appendChild(li); return;
+  }
+  items.forEach(it=>{
+    const li=document.createElement('li');
+    const b=document.createElement('button');
+    b.type='button';
+    b.innerHTML='<span class="dash"></span>'+it.title+
+      (it.year?'<span class="t-year">'+it.year+'</span>':'');
+    b.setAttribute('aria-current',String(current&&current.slug===it.slug));
+    /* hover = 프리뷰, click = 확정 */
+    b.addEventListener('pointerenter',()=>{ if(fine.matches){preview=it; render();} });
+    b.addEventListener('click',()=>{ current=it; preview=null; setOpen(false); renderTitles(); render(); });
+    li.appendChild(b); elTitles.appendChild(li);
+  });
+}
+function paint(){
+  const it=preview||current;
+  if(!it){
+    const e=EMPTY[section]||{h:'',p:''};
+    elReading.className='empty';
+    elReading.innerHTML='<h2>'+e.h+'</h2><p>'+e.p+'</p>';
+    return;
+  }
+  elReading.className='reading';
+  if(it.pending){
+    elReading.className='empty';
+    elReading.innerHTML='<h2>'+it.title+'</h2><p>이 자리에 원고가 들어갑니다.</p>';
+    return;
+  }
+  let h='<h1 class="title">'+it.title+'</h1>';
+  it.stanzas.forEach(s=>{
+    h+='<section class="stanza"><span class="stanza-no">'+s.no+'</span>'+
+       s.lines.map(l=>'<p class="line">'+l+'</p>').join('')+'</section>';
+  });
+  h+='<p class="meta"><span>'+it.year+'</span><span>'+it.outlet+'</span>'+
+     '<span class="award">'+it.award+'</span></p>';
+  elReading.innerHTML=h;
+}
+function render(){ paint(); layout(); }
+renderGnb(); renderTitles(); render();
+</script>
+</body>
+</html>
