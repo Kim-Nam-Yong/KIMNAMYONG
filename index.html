@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KIMNAMYONG</title>
 <meta name="description" content="김남용 — 일, 글, 삶.">
+<meta name="theme-color" id="themeColor" content="#FFFFFF">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <style>
@@ -25,27 +26,33 @@
   --drawer-w:264px;
   --ease:cubic-bezier(.22,1,.36,1);
   --edge:env(safe-area-inset-left,0px);
+  color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --paper:#0C0E11; --warm:#101215; --ink:#E8E9EB; --ink-soft:#8C949E;
     --faint:#6B737C; --line:#252A31; --slot:#191D22; --slot-mark:#333A42;
     --accent:#7FA6C4; --band:#000000; --scrim:rgba(0,0,0,.55);
+    color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#0C0E11; --warm:#101215; --ink:#E8E9EB; --ink-soft:#8C949E;
   --faint:#6B737C; --line:#252A31; --slot:#191D22; --slot-mark:#333A42;
   --accent:#7FA6C4; --band:#000000; --scrim:rgba(0,0,0,.55);
+  color-scheme:dark;
 }
 
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+/* 브라우저 바탕을 시트 바탕과 일치시킨다 — 가장자리에 띠가 생기지 않도록 */
 body{
-  margin:0; background:var(--band); color:var(--ink);
+  margin:0; background:var(--paper); color:var(--ink);
   font-family:var(--sans); overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
+  transition:background-color .28s var(--ease);
 }
+body[data-layout="E"]{background:var(--warm)}
 :focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
 img{display:block; width:100%; height:100%; object-fit:cover}
 
@@ -410,6 +417,9 @@ function renderTitles(){
 function render(){
   const it=preview||current;
   body.dataset.section=section;
+  body.dataset.layout=(it&&it.layout)||'A';
+  const tc=document.getElementById('themeColor');
+  if(tc) tc.content=getComputedStyle(body).backgroundColor;
   if(!it){ sheet.dataset.layout='E'; sheet.innerHTML='<h1 class="E-title">준비 중</h1>'; return; }
   sheet.dataset.layout=it.layout||'A';
   sheet.innerHTML = it.layout==='E' ? layoutE(it) : (it.layout==='C' ? layoutC(it) : layoutA(it));
