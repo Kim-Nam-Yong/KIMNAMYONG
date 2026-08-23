@@ -3,8 +3,8 @@
 import json, re, os, glob
 
 CREDIT_KEYS = [('client','고객사'), ('agency','수행사'), ('period','기간'), ('pm','PM'),
-               ('director','디렉터'), ('planning','기획'), ('design','디자인'),
-               ('publishing','퍼블리싱')]
+               ('cd','CD'), ('planning','기획'), ('design','디자인'), ('publishing','퍼블리싱'),
+               ('dev','개발'), ('role','역할'), ('url','사이트')]
 MAX_DETAILS = 6          # 큰 이미지 1장 + 작은 이미지 최대 6장
 
 

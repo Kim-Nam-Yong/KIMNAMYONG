@@ -8,3 +8,10 @@ kimnamyong/
 # macOS
 .DS_Store
 .env*
+
+# 사이트가 쓰지 않는 폰트 52MB — 공개 저장소 재배포 부담
+Font/
+# 이관 작업용 임시 백업
+일.백업/
+# Excel 잠금 파일
+~$*.xlsx
